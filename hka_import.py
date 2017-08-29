@@ -77,7 +77,7 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
     # 仮にidx=0をみる
     ntransforms = len(anim.pose[0].transforms)
 
-    # ntransformsを超える位置のnameは無視したいのでminで評価
+    # ntransforms-1を超える位置のnameは無視したいのでminで評価
     for i in range(min(ntransforms, nbones)):
         bone = skeleton.bones[i]
         # blender naming convention
