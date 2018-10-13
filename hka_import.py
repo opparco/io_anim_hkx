@@ -116,12 +116,17 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
             # NOTE: bone.matrix_local
             # 4x4 bone matrix relative to armature
 
-            if p_bone.bone.parent:
-                pose_local = p_bone.bone.parent.matrix_local * t.to_matrix()
+            # NOTE: p_bone.matrix_basis
+            # 4x4 pose matrix relative to the parent and own rest bone
+
+            bone = p_bone.bone  # rest bone
+
+            if bone.parent:
+                pose_local = bone.parent.matrix_local * t.to_matrix()
             else:
                 pose_local = t.to_matrix()
 
-            p_bone.matrix_basis = p_bone.bone.matrix_local.inverted() * pose_local
+            p_bone.matrix_basis = bone.matrix_local.inverted() * pose_local
 
     def import_motion():
 
@@ -182,12 +187,17 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
                 # NOTE: bone.matrix_local
                 # 4x4 bone matrix relative to armature
 
-                if p_bone.bone.parent:
-                    pose_local = p_bone.bone.parent.matrix_local * t.to_matrix()
+                # NOTE: p_bone.matrix_basis
+                # 4x4 pose matrix relative to the parent and own rest bone
+
+                bone = p_bone.bone  # rest bone
+
+                if bone.parent:
+                    pose_local = bone.parent.matrix_local * t.to_matrix()
                 else:
                     pose_local = t.to_matrix()
 
-                matrix_basis = p_bone.bone.matrix_local.inverted() * pose_local
+                matrix_basis = bone.matrix_local.inverted() * pose_local
 
                 location, rotation, scale = matrix_basis.decompose()
 
