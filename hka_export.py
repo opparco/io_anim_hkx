@@ -61,12 +61,12 @@ def export_hkaAnimation(anim, skeleton):
                 continue
             bone_i = bone_indices[p_bone.name]
 
-            pose_local = p_bone.bone.matrix_local * p_bone.matrix_basis
+            bone = p_bone.bone  # rest bone
 
-            if p_bone.bone.parent:
-                m = p_bone.bone.parent.matrix_local.inverted() * pose_local
+            if bone.parent:
+                m = bone.parent.matrix_local.inverted() * bone.matrix_local * p_bone.matrix_basis
             else:
-                m = pose_local
+                m = bone.matrix_local * p_bone.matrix_basis
 
             location, rotation, scale = m.decompose()
 
