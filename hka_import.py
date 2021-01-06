@@ -33,9 +33,10 @@ def import_hkaSkeleton(skeleton):
         arm_ob.select = True
         arm_ob.show_x_ray = True  # 透視
 
-        scene = bpy.context.scene
-        scene.objects.link(arm_ob)
-        scene.objects.active = arm_ob
+        view_layer = bpy.context.view_layer
+        view_layer.active_layer_collection.collection.objects.link(arm_ob)
+        arm_ob.select_set(True)
+        view_layer.objects.active = arm_ob
 
         world_scale = 0.1
 
@@ -95,11 +96,12 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
 
     def import_pose():
         arm_ob = detect_armature()
-        arm_ob.select = True
+        # arm_ob.select = True
 
-        scene = bpy.context.scene
-        # scene.objects.link(arm_ob)
-        scene.objects.active = arm_ob
+        view_layer = bpy.context.view_layer
+        # view_layer.active_layer_collection.collection.objects.link(arm_ob)
+        # arm_ob.select_set(True)
+        view_layer.objects.active = arm_ob
 
         pose = anim.pose[0]
 
@@ -144,11 +146,10 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
         #
 
         arm_ob = detect_armature()
-        arm_ob.select = True
+        # arm_ob.select = True
 
-        scene = bpy.context.scene
-        # scene.objects.link(arm_ob)
-        scene.objects.active = arm_ob
+        view_layer = bpy.context.view_layer
+        view_layer.objects.active = arm_ob
 
         arm_ob.animation_data_create()
         action = bpy.data.actions.new(name='Action')
@@ -185,15 +186,12 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
                 # NOTE: bone.matrix_local
                 # 4x4 bone matrix relative to armature
 
-                # NOTE: p_bone.matrix_basis
-                # 4x4 pose matrix relative to the parent and own rest bone
-
-                bone = p_bone.bone  # rest bone
-
-                if bone.parent:
-                    matrix_basis = bone.matrix_local.inverted() * bone.parent.matrix_local * t.to_matrix()
+                if p_bone.bone.parent:
+                    pose_local = p_bone.bone.parent.matrix_local * t.to_matrix()
                 else:
-                    matrix_basis = bone.matrix_local.inverted() * t.to_matrix()
+                    pose_local = t.to_matrix()
+
+                matrix_basis = p_bone.bone.matrix_local.inverted() * pose_local
 
                 location, rotation, scale = matrix_basis.decompose()
 
@@ -230,10 +228,11 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
             for bez in cu.keyframe_points:
                 bez.interpolation = 'LINEAR'
 
-    if use_anim:
-        import_motion()
-    else:
-        import_pose()
+    import_motion()
+    import_pose()
+    # if use_anim:
+    # else:
+    #     import_pose()
 
 
 def import_hkafile(skeleton_file, anim_file, use_anim=False):
