@@ -19,12 +19,12 @@ class hkaImportOperator(bpy.types.Operator, ImportHelper):
     bl_label = "Import hkx"
 
     filename_ext = ".hkx"
-    filter_glob = bpy.props.StringProperty(default="*.hkx", options={'HIDDEN'})
+    filter_glob : bpy.props.StringProperty(default="*.hkx", options={'HIDDEN'})
 
-    use_anim = BoolProperty(
+    use_anim: BoolProperty(
             name="Import to Animation",
             description="if uncheck then import to Pose",
-            default=False,
+            default=True,
             )
 
     def execute(self, context):

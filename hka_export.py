@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""anim.bin exporter for blender 2.78
+"""anim.bin exporter for blender ^2.8
 """
 
 import os
@@ -14,9 +14,7 @@ from io_anim_hkx.naming import get_bone_name_for_blender
 
 def export_hkaAnimation(anim, skeleton):
 
-    #
     # create bone map
-    #
     # map pose_bone name to bone_idx
 
     bone_indices = {}
@@ -77,7 +75,6 @@ def export_hkaAnimation(anim, skeleton):
 
     export_pose()
     # export_motion()
-
 
 def export_hkafile(skeleton_file, anim_file):
 

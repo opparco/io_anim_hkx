@@ -9,7 +9,6 @@ import bpy
 from bpy_extras.io_utils import ExportHelper
 from io_anim_hkx.hka_export import export_hkafile
 
-
 class hkaExportOperator(bpy.types.Operator, ExportHelper):
     """Export a hkaAnimationContainer file
     """
@@ -18,7 +17,7 @@ class hkaExportOperator(bpy.types.Operator, ExportHelper):
     bl_label = "Export hkx"
 
     filename_ext = ".hkx"
-    filter_glob = bpy.props.StringProperty(default="*.hkx", options={'HIDDEN'})
+    filter_glob : bpy.props.StringProperty(default="*.hkx", options={'HIDDEN'})
 
     def execute(self, context):
         dirname = os.path.dirname(os.path.abspath(__file__))

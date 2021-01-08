@@ -92,7 +92,7 @@ class Transform(object):
         self.scale = scale.z
 
     def write(self, file):
-        v = self.translation * self.world_scale_reciprocal
+        v = self.translation @ self.world_scale_reciprocal
         v = (v.x, v.y, v.z, 0)
         q = self.rotation
         q = (q.x, q.y, q.z, q.w)
@@ -107,14 +107,14 @@ class Transform(object):
         v = Vector(other.translation)  # dup
         v.rotate(self.rotation)
         t.translation = self.translation + v * self.scale
-        t.rotation = self.rotation * other.rotation
+        t.rotation = self.rotation @ other.rotation
         t.scale = self.scale * other.scale
         return t
 
     def to_matrix(self):
         m_rotation = self.rotation.to_matrix().to_4x4()  # 3x3 to 4x4
         m_scale = Matrix.Scale(self.scale, 4)
-        m = m_rotation * m_scale
+        m = m_rotation @ m_scale
         m.translation = self.translation
         return m
 
