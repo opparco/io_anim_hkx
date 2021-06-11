@@ -7,7 +7,7 @@ import subprocess
 
 import bpy
 from bpy_extras.io_utils import ExportHelper
-from io_anim_hkx.hka_export import export_hkafile
+from .hka_export import export_hkafile
 
 class hkaExportOperator(bpy.types.Operator, ExportHelper):
     """Export a hkaAnimationContainer file

@@ -8,8 +8,8 @@ import bpy
 from math import radians
 from mathutils import Euler, Matrix, Quaternion, Vector
 import numpy as np
-from io_anim_hkx.io.hka import hkaSkeleton, hkaAnimation
-from io_anim_hkx.naming import get_bone_name_for_blender
+from .io.hka import hkaSkeleton, hkaAnimation
+from .naming import get_bone_name_for_blender
 
 
 def import_hkaSkeleton(skeleton):

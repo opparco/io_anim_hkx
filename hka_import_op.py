@@ -8,7 +8,7 @@ import subprocess
 import bpy
 from bpy.props import BoolProperty
 from bpy_extras.io_utils import ImportHelper
-from io_anim_hkx.hka_import import import_hkafile
+from .hka_import import import_hkafile
 
 
 class hkaImportOperator(bpy.types.Operator, ImportHelper):

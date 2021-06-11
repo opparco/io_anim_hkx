@@ -15,7 +15,7 @@ bl_info = {
 import os
 import bpy
 import bpy.utils.previews
-from io_anim_hkx import hka_import_op, hka_export_op
+from . import hka_import_op, hka_export_op
 
 class Panel(bpy.types.Panel):
     """Creates a Panel in the 3D view Tools panel"""
