@@ -38,7 +38,8 @@ def export_hkaAnimation(anim, skeleton):
 
     def export_pose():
         arm_ob = detect_armature()
-        arm_ob.select = True
+        bpy.context.view_layer.objects.active = arm_ob
+        bpy.context.active_object.select_set(state=True)
 
         anim.numOriginalFrames = 1
         anim.duration = 0.033333
@@ -62,9 +63,9 @@ def export_hkaAnimation(anim, skeleton):
             bone = p_bone.bone  # rest bone
 
             if bone.parent:
-                m = bone.parent.matrix_local.inverted() * bone.matrix_local * p_bone.matrix_basis
+                m = bone.parent.matrix_local.inverted() @ bone.matrix_local @ p_bone.matrix_basis
             else:
-                m = bone.matrix_local * p_bone.matrix_basis
+                m = bone.matrix_local @ p_bone.matrix_basis
 
             location, rotation, scale = m.decompose()
 

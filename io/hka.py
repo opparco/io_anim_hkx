@@ -92,7 +92,7 @@ class Transform(object):
         self.scale = scale.z
 
     def write(self, file):
-        v = self.translation @ self.world_scale_reciprocal
+        v = self.translation * self.world_scale_reciprocal
         v = (v.x, v.y, v.z, 0)
         q = self.rotation
         q = (q.x, q.y, q.z, q.w)
