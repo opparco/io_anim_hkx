@@ -1,4 +1,3 @@
-
 """hka export operator
 """
 
@@ -9,15 +8,14 @@ import bpy
 from bpy_extras.io_utils import ExportHelper
 from .hka_export import export_hkafile
 
+
 class hkaExportOperator(bpy.types.Operator, ExportHelper):
     """Export a hkaAnimationContainer file
     """
     bl_idname = "export_anim.hkx"
-
     bl_label = "Export hkx"
-
     filename_ext = ".hkx"
-    filter_glob : bpy.props.StringProperty(default="*.hkx", options={'HIDDEN'})
+    filter_glob: bpy.props.StringProperty(default="*.hkx", options={'HIDDEN'})
 
     def execute(self, context):
         dirname = os.path.dirname(os.path.abspath(__file__))
@@ -32,6 +30,6 @@ class hkaExportOperator(bpy.types.Operator, ExportHelper):
         export_hkafile(skeleton_file, anim_bin_file)
 
         command = dirname + '/bin/hkconv.exe'
-        process = subprocess.run([command, '-o', anim_hkx_file, anim_bin_file])
+        subprocess.run([command, '-o', anim_hkx_file, anim_bin_file])
 
         return {'FINISHED'}

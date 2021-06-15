@@ -34,7 +34,6 @@ def import_hkaSkeleton(skeleton):
         bpy.context.collection.objects.link(arm_ob)
         bpy.context.view_layer.objects.active = arm_ob
         bpy.context.active_object.select_set(state=True)
-        
         world_scale = 0.1
 
         bpy.ops.object.mode_set(mode="EDIT")
@@ -115,7 +114,8 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
             else:
                 pose_local = t.to_matrix()
 
-            p_bone.matrix_basis = p_bone.bone.matrix_local.inverted() @ pose_local
+            p_bone_inverted = p_bone.bone.matrix_local.inverted()
+            p_bone.matrix_basis = p_bone_inverted @ pose_local
 
     def import_motion():
 
@@ -167,7 +167,8 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
                 # 4x4 bone matrix relative to armature
 
                 if p_bone.bone.parent:
-                    pose_local = p_bone.bone.parent.matrix_local @ t.to_matrix()
+                    p_bone_local = p_bone.bone.parent.matrix_local
+                    pose_local = p_bone_local @ t.to_matrix()
                 else:
                     pose_local = t.to_matrix()
 
@@ -184,7 +185,9 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
 
             for axis_i in range(3):  # xyz
                 curve = action.fcurves.new(
-                    data_path=location_path, index=axis_i, action_group=location_group)
+                    data_path=location_path,
+                    index=axis_i,
+                    action_group=location_group)
                 keyframe_points = curve.keyframe_points
                 curve.keyframe_points.add(npose)
 
@@ -196,7 +199,9 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
 
             for axis_i in range(3):  # xyz
                 curve = action.fcurves.new(
-                    data_path=angle_path, index=axis_i, action_group=angle_group)
+                    data_path=angle_path,
+                    index=axis_i,
+                    action_group=angle_group)
                 keyframe_points = curve.keyframe_points
                 curve.keyframe_points.add(npose)
 

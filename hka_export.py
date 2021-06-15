@@ -63,7 +63,8 @@ def export_hkaAnimation(anim, skeleton):
             bone = p_bone.bone  # rest bone
 
             if bone.parent:
-                m = bone.parent.matrix_local.inverted() @ bone.matrix_local @ p_bone.matrix_basis
+                m = bone.parent.matrix_local.inverted() @ bone.matrix_local
+                m = m @ p_bone.matrix_basis
             else:
                 m = bone.matrix_local @ p_bone.matrix_basis
 
@@ -76,6 +77,7 @@ def export_hkaAnimation(anim, skeleton):
 
     export_pose()
     # export_motion()
+
 
 def export_hkafile(skeleton_file, anim_file):
 

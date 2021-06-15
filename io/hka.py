@@ -219,7 +219,8 @@ class hkaSkeleton(object):
             f = read_float(file)
             self.referenceFloats.append(f)
 
-        # Floating point track slots. Often used for auxiliary float data or morph target parameters etc.
+        # Floating point track slots.
+        # Often used for auxiliary float data or morph target parameters etc.
         # This defines the target when binding animations to a particular rig.
         nfloatSlots = read_int(file)
         del self.floatSlots[:]
