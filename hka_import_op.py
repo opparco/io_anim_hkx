@@ -30,8 +30,10 @@ class hkaImportOperator(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         dirname = os.path.dirname(os.path.abspath(__file__))
 
-        skeleton_file = dirname + "/resources/skeleton.bin"
-        anim_hkx_file = self.properties.filepath
+        skeleton_file = dirname + "/resources/skeleton.bin" # type: str
+
+        # 'anim_hkx_file' path to hkx file
+        anim_hkx_file = self.properties.filepath # type: str
 
         basename = os.path.basename(anim_hkx_file)
         basename, extension = os.path.splitext(basename)
@@ -40,7 +42,8 @@ class hkaImportOperator(bpy.types.Operator, ImportHelper):
         command = dirname + '/bin/hkdump-bin.exe'
         process = subprocess.run([command, '-o', anim_bin_file, anim_hkx_file])
 
-        use_anim = self.properties.use_anim
+        # 'use_anim' value from default settings addons
+        use_anim = self.properties.use_anim # type: bool
 
         if process.returncode == 0:
             import_hkafile(skeleton_file, anim_bin_file, use_anim)
