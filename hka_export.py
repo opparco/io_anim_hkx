@@ -7,6 +7,8 @@ import os
 import bpy
 from math import radians
 from mathutils import Euler, Matrix, Quaternion, Vector
+import numpy as np
+
 # import numpy as np
 from .io.hka import hkaSkeleton, hkaAnimation, hkaPose, Transform
 from .naming import get_bone_name_for_blender
@@ -37,22 +39,39 @@ def export_hkaAnimation(anim, skeleton):
         return found
 
     def export_pose():
+        selected_obj = bpy.context.selected_objects
+        frame_range = selected_obj[0].animation_data.action.frame_range
         arm_ob = detect_armature()
-        bpy.context.view_layer.objects.active = arm_ob
-        bpy.context.active_object.select_set(state=True)
+        # bpy.context.view_layer.objects.active = arm_ob
+        # bpy.context.active_object.select_set(state=True)
+        # arm_ob.select_set(True)
 
-        anim.numOriginalFrames = 1
-        anim.duration = 0.033333
+        keyframes = int(frame_range.length) # type: int
+        duration = float(keyframes) / 30.0 # type: float
+
+        time = np.zeros(keyframes, dtype=np.float32)
+        locations = np.zeros((keyframes, 3), dtype=np.float32)
+        angles = np.zeros((keyframes, 3), dtype=np.float32)
+
+        for i in range(keyframes):
+            t = float(keyframes) / 30.0
+            t = t / float(keyframes)
+            t = t * float(i)
+            time[i] = float(1.0 + t * 30.0)
+
+        anim.numOriginalFrames = keyframes
+        anim.duration = duration
 
         del anim.pose[:]
-        pose = hkaPose()
-        anim.pose.append(pose)
+        for i in range(keyframes):
+            pose = hkaPose()
+            anim.pose.append(pose)
 
         pose.time = 0.0
 
         for bone in skeleton.bones:
             t = bone.local.copy()
-            pose.transforms.append(t)
+            pose[i].transforms.append(t)
 
         for p_bone in arm_ob.pose.bones:
             # bone mapに含まれないnameは無視する
@@ -75,8 +94,15 @@ def export_hkaAnimation(anim, skeleton):
             t.rotation = rotation
             t.scale = scale.z
 
+
+    def export_motion():
+        # arm = bpy.context.selected_objects[0].animation_data['action'].frame_range
+        arm_ob = detect_armature()
+        pass
+
     export_pose()
-    # export_motion()
+    export_motion()
+
 
 
 def export_hkafile(skeleton_file, anim_file):
