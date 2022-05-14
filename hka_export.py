@@ -8,11 +8,8 @@ import bpy
 from math import radians
 from mathutils import Euler, Matrix, Quaternion, Vector
 import numpy as np
-
-# import numpy as np
 from .io.hka import hkaSkeleton, hkaAnimation, hkaPose, Transform
 from .naming import get_bone_name_for_blender
-
 
 def export_hkaAnimation(anim, skeleton):
 
@@ -38,40 +35,71 @@ def export_hkaAnimation(anim, skeleton):
                 break
         return found
 
-    def export_pose():
-        selected_obj = bpy.context.selected_objects
-        frame_range = selected_obj[0].animation_data.action.frame_range
+    def export_motion():
         arm_ob = detect_armature()
-        # bpy.context.view_layer.objects.active = arm_ob
-        # bpy.context.active_object.select_set(state=True)
-        # arm_ob.select_set(True)
+        bpy.context.view_layer.objects.active = arm_ob
+        bpy.context.active_object.select_set(state=True)
 
-        keyframes = int(frame_range.length) # type: int
-        duration = float(keyframes) / 30.0 # type: float
+        # Armature of this object
+        object_armature = bpy.data.objects.get('Armature')
+        # Animation data of this object
+        animation_data = object_armature.animation_data
+        animation_action = animation_data.action
 
-        time = np.zeros(keyframes, dtype=np.float32)
-        locations = np.zeros((keyframes, 3), dtype=np.float32)
-        angles = np.zeros((keyframes, 3), dtype=np.float32)
-
-        for i in range(keyframes):
-            t = float(keyframes) / 30.0
-            t = t / float(keyframes)
-            t = t * float(i)
-            time[i] = float(1.0 + t * 30.0)
-
-        anim.numOriginalFrames = keyframes
-        anim.duration = duration
+        # get the number of frames from the rendering settings
+        fps = bpy.context.scene.render.fps # type: int
+        # fps = 30 # type: int
+        anim.numOriginalFrames = int(animation_action.frame_range[1] + 1)
+        anim.duration = float(anim.numOriginalFrames) / float(fps)
 
         del anim.pose[:]
-        for i in range(keyframes):
+        bpy.context.scene.frame_set(0)
+        for i in range(anim.numOriginalFrames):
+            bpy.context.scene.frame_set(i)
             pose = hkaPose()
+            pose.time = (i * anim.duration) / anim.numOriginalFrames
             anim.pose.append(pose)
+            for bone in skeleton.bones:
+                t = bone.local.copy()
+                pose.transforms.append(t)
+
+            for p_bone in arm_ob.pose.bones:
+                # bone mapに含まれないnameは無視する
+                if p_bone.name not in bone_indices:
+                    continue
+                bone_i = bone_indices[p_bone.name]
+
+
+                bone = p_bone.bone  # rest bone
+
+                if bone.parent:
+                    m = bone.parent.matrix_local.inverted() @ bone.matrix_local
+                    m = m @ p_bone.matrix_basis
+                else:
+                    m = bone.matrix_local @ p_bone.matrix_basis
+
+                location, rotation, scale = m.decompose()
+                t = pose.transforms[bone_i]
+                t.translation = location
+                t.rotation = rotation
+                t.scale = scale.z
+
+    def export_pose():
+        arm_ob = detect_armature()
+        bpy.context.view_layer.objects.active = arm_ob
+        bpy.context.active_object.select_set(state=True)
+
+        anim.numOriginalFrames = 1
+        anim.duration = 0.033333
+
+        del anim.pose[:]
+        pose = hkaPose()
+        anim.pose.append(pose)
 
         pose.time = 0.0
-
         for bone in skeleton.bones:
             t = bone.local.copy()
-            pose[i].transforms.append(t)
+            pose.transforms.append(t)
 
         for p_bone in arm_ob.pose.bones:
             # bone mapに含まれないnameは無視する
@@ -94,15 +122,19 @@ def export_hkaAnimation(anim, skeleton):
             t.rotation = rotation
             t.scale = scale.z
 
+    def matrix_world(armature_ob, bone_name):
+        local = armature_ob.data.bones[bone_name].matrix_local
+        basis = armature_ob.pose.bones[bone_name].matrix_basis
 
-    def export_motion():
-        # arm = bpy.context.selected_objects[0].animation_data['action'].frame_range
-        arm_ob = detect_armature()
-        pass
+        parent = armature_ob.pose.bones[bone_name].parent
+        if parent == None:
+            return  local * basis
+        else:
+            parent_local = armature_ob.data.bones[parent.name].matrix_local
+            return matrix_world(armature_ob, parent.name) * (parent_local.inverted() * local) * basis
 
-    export_pose()
+    # export_pose()
     export_motion()
-
 
 
 def export_hkafile(skeleton_file, anim_file):
