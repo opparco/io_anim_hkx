@@ -11,7 +11,7 @@ bl_info = {
   "description": "Import-Expots skyrim hkx format",
   "location": "File > Import > Skyrim hkx (.hkx)",
   "name": "Skyrim hkx format",
-  "version": (0, 0, 2, 0),
+  "version": (0, 0, 3, 0),
   "warning": "",
   "wiki_url": "https://github.com/opparco/io_anim_hkx",
   "tracker_url": "https://github.com/opparco/io_anim_hkx",
