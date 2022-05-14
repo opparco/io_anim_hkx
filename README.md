@@ -8,9 +8,6 @@ Blender ^2.8.0 HKX Addon: Import/Export animation files of The Elder Scrolls V: 
 ## Prerequisite
 - Blender ^2.8.0
 
-## Maintenance
-[UsingSession](https://github.com/UsingSession)
-
 ## Install
 Extract the io_anim_hkx folder into addons.
 
