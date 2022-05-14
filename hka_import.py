@@ -5,30 +5,20 @@
 
 import os
 import bpy
-from math import radians
 from mathutils import Euler, Matrix, Quaternion, Vector
 import numpy as np
 from .io.hka import hkaSkeleton, hkaAnimation
-from .naming import get_bone_name_for_blender
-
+from .utility.help import Help
 
 def import_hkaSkeleton(skeleton):
 
-    def detect_armature():
-        found = None
-        for ob in bpy.context.selected_objects:
-            if ob.type == 'ARMATURE':
-                found = ob
-                break
-        return found
-
     def import_armature():
-        # objectがないと失敗するのでpoll
+        # object If there is no poll, it will fail.
         if bpy.ops.object.mode_set.poll():
             bpy.ops.object.mode_set(mode="OBJECT")
 
         armature = bpy.data.armatures.new('Armature')
-        armature.show_axes = True  # 座標軸
+        armature.show_axes = True  # Axis
         arm_ob = bpy.data.objects.new(armature.name, armature)
 
         bpy.context.collection.objects.link(arm_ob)
@@ -38,7 +28,7 @@ def import_hkaSkeleton(skeleton):
 
         bpy.ops.object.mode_set(mode="EDIT")
         for bone in skeleton.bones:
-            b_bone_name = get_bone_name_for_blender(bone.name)
+            b_bone_name = Help.get_bone_name_for_blender(bone.name)
             b_bone = armature.edit_bones.new(b_bone_name)
             armature.edit_bones.active = b_bone
 
@@ -52,7 +42,7 @@ def import_hkaSkeleton(skeleton):
         return arm_ob
 
     # 既存のarmatureを使う場合
-    armature_object = detect_armature()
+    armature_object = Help.detect_armature()
 
     if armature_object is None:
         # skeleton.bonesをimportしてarmatureを作成する場合
@@ -70,26 +60,21 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
 
     # len(p.transforms) for p in anim.pose は全て同値
     # 仮にidx=0をみる
+    # t = anim.pose[0].transforms
     ntransforms = len(anim.pose[0].transforms)
 
-    # ntransformsを超える位置のnameは無視したいのでminで評価
+    # ntransforms
+    # I want to ignore names that exceed ntransforms,
+    # so evaluate with min
     for i in range(min(ntransforms, nbones)):
         bone = skeleton.bones[i]
         # blender naming convention
         # io_scene_nifに合わせる
-        p_bone_name = get_bone_name_for_blender(bone.name)
+        p_bone_name = Help.get_bone_name_for_blender(bone.name)
         bone_indices[p_bone_name] = i
 
-    def detect_armature():
-        found = None
-        for ob in bpy.context.selected_objects:
-            if ob.type == 'ARMATURE':
-                found = ob
-                break
-        return found
-
     def import_pose():
-        arm_ob = detect_armature()
+        arm_ob = Help.detect_armature()
 
         bpy.context.view_layer.objects.active = arm_ob
         arm_ob.select_set(True)
@@ -127,14 +112,13 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
         location_group = 'Location'
         angle_group = 'Rotation'
 
-        arm_ob = detect_armature()
+        arm_ob = Help.detect_armature()
         bpy.context.view_layer.objects.active = arm_ob
         arm_ob.select_set(True)
 
         arm_ob.animation_data_create()
         action = bpy.data.actions.new(name='Action')
         arm_ob.animation_data.action = action
-
         npose = len(anim.pose)
         print("#pose: {0}".format(npose))
 
@@ -142,13 +126,13 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
         locations = np.zeros((npose, 3), dtype=np.float32)
         angles = np.zeros((npose, 3), dtype=np.float32)
 
-        for i in range(npose):
+        for i in range(npose): #164 poses
             pose = anim.pose[i]
             time[i] = 1.0 + pose.time * 30.0
 
         bpy.ops.object.mode_set(mode="POSE")
 
-        for p_bone in arm_ob.pose.bones:
+        for p_bone in arm_ob.pose.bones: # 99 bones
             # bone mapに含まれないnameは無視する
             if p_bone.name not in bone_indices:
                 continue
@@ -189,6 +173,7 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
                     index=axis_i,
                     action_group=location_group)
                 keyframe_points = curve.keyframe_points
+                test = npose
                 curve.keyframe_points.add(npose)
 
                 for i in range(npose):
