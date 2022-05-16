@@ -1,47 +1,34 @@
 #!/usr/bin/env python
 
-"""skeleton.bin anim.bin importer for blender 2.78
+"""skeleton.bin anim.bin importer for blender ^2.8
 """
 
 import os
 import bpy
-from math import radians
 from mathutils import Euler, Matrix, Quaternion, Vector
 import numpy as np
-from io_anim_hkx.io.hka import hkaSkeleton, hkaAnimation
-from io_anim_hkx.naming import get_bone_name_for_blender
-
+from .io.hka import hkaSkeleton, hkaAnimation
+from .utility.help import Help
 
 def import_hkaSkeleton(skeleton):
 
-    def detect_armature():
-        found = None
-        for ob in bpy.context.selected_objects:
-            if ob.type == 'ARMATURE':
-                found = ob
-                break
-        return found
-
     def import_armature():
-        # objectがないと失敗するのでpoll
+        # object If there is no poll, it will fail.
         if bpy.ops.object.mode_set.poll():
             bpy.ops.object.mode_set(mode="OBJECT")
 
         armature = bpy.data.armatures.new('Armature')
-        armature.show_axes = True  # 座標軸
+        armature.show_axes = True  # Axis
         arm_ob = bpy.data.objects.new(armature.name, armature)
-        arm_ob.select = True
-        arm_ob.show_x_ray = True  # 透視
 
-        scene = bpy.context.scene
-        scene.objects.link(arm_ob)
-        scene.objects.active = arm_ob
-
+        bpy.context.collection.objects.link(arm_ob)
+        bpy.context.view_layer.objects.active = arm_ob
+        bpy.context.active_object.select_set(state=True)
         world_scale = 0.1
 
         bpy.ops.object.mode_set(mode="EDIT")
         for bone in skeleton.bones:
-            b_bone_name = get_bone_name_for_blender(bone.name)
+            b_bone_name = Help.get_bone_name_for_blender(bone.name)
             b_bone = armature.edit_bones.new(b_bone_name)
             armature.edit_bones.active = b_bone
 
@@ -55,7 +42,7 @@ def import_hkaSkeleton(skeleton):
         return arm_ob
 
     # 既存のarmatureを使う場合
-    armature_object = detect_armature()
+    armature_object = Help.detect_armature()
 
     if armature_object is None:
         # skeleton.bonesをimportしてarmatureを作成する場合
@@ -64,9 +51,7 @@ def import_hkaSkeleton(skeleton):
 
 def import_hkaAnimation(anim, skeleton, use_anim=False):
 
-    #
     # create bone map
-    #
     # map pose_bone name to bone_idx
 
     bone_indices = {}
@@ -75,31 +60,24 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
 
     # len(p.transforms) for p in anim.pose は全て同値
     # 仮にidx=0をみる
+    # t = anim.pose[0].transforms
     ntransforms = len(anim.pose[0].transforms)
 
-    # ntransforms-1を超える位置のnameは無視したいのでminで評価
+    # ntransforms
+    # I want to ignore names that exceed ntransforms,
+    # so evaluate with min
     for i in range(min(ntransforms, nbones)):
         bone = skeleton.bones[i]
         # blender naming convention
         # io_scene_nifに合わせる
-        p_bone_name = get_bone_name_for_blender(bone.name)
+        p_bone_name = Help.get_bone_name_for_blender(bone.name)
         bone_indices[p_bone_name] = i
 
-    def detect_armature():
-        found = None
-        for ob in bpy.context.selected_objects:
-            if ob.type == 'ARMATURE':
-                found = ob
-                break
-        return found
-
     def import_pose():
-        arm_ob = detect_armature()
-        arm_ob.select = True
+        arm_ob = Help.detect_armature()
 
-        scene = bpy.context.scene
-        # scene.objects.link(arm_ob)
-        scene.objects.active = arm_ob
+        bpy.context.view_layer.objects.active = arm_ob
+        arm_ob.select_set(True)
 
         pose = anim.pose[0]
 
@@ -116,22 +94,17 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
             # NOTE: bone.matrix_local
             # 4x4 bone matrix relative to armature
 
-            # NOTE: p_bone.matrix_basis
-            # 4x4 pose matrix relative to the parent and own rest bone
-
-            bone = p_bone.bone  # rest bone
-
-            if bone.parent:
-                p_bone.matrix_basis = bone.matrix_local.inverted() * bone.parent.matrix_local * t.to_matrix()
+            if p_bone.bone.parent:
+                pose_local = p_bone.bone.parent.matrix_local @ t.to_matrix()
             else:
-                p_bone.matrix_basis = bone.matrix_local.inverted() * t.to_matrix()
+                pose_local = t.to_matrix()
+
+            p_bone_inverted = p_bone.bone.matrix_local.inverted()
+            p_bone.matrix_basis = p_bone_inverted @ pose_local
 
     def import_motion():
 
-        #
         # constants
-        #
-
         # euler order
         order = 'XYZ'
 
@@ -139,21 +112,13 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
         location_group = 'Location'
         angle_group = 'Rotation'
 
-        #
-        #
-        #
-
-        arm_ob = detect_armature()
-        arm_ob.select = True
-
-        scene = bpy.context.scene
-        # scene.objects.link(arm_ob)
-        scene.objects.active = arm_ob
+        arm_ob = Help.detect_armature()
+        bpy.context.view_layer.objects.active = arm_ob
+        arm_ob.select_set(True)
 
         arm_ob.animation_data_create()
         action = bpy.data.actions.new(name='Action')
         arm_ob.animation_data.action = action
-
         npose = len(anim.pose)
         print("#pose: {0}".format(npose))
 
@@ -161,13 +126,13 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
         locations = np.zeros((npose, 3), dtype=np.float32)
         angles = np.zeros((npose, 3), dtype=np.float32)
 
-        for i in range(npose):
+        for i in range(npose): #164 poses
             pose = anim.pose[i]
             time[i] = 1.0 + pose.time * 30.0
 
         bpy.ops.object.mode_set(mode="POSE")
 
-        for p_bone in arm_ob.pose.bones:
+        for p_bone in arm_ob.pose.bones: # 99 bones
             # bone mapに含まれないnameは無視する
             if p_bone.name not in bone_indices:
                 continue
@@ -185,15 +150,13 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
                 # NOTE: bone.matrix_local
                 # 4x4 bone matrix relative to armature
 
-                # NOTE: p_bone.matrix_basis
-                # 4x4 pose matrix relative to the parent and own rest bone
-
-                bone = p_bone.bone  # rest bone
-
-                if bone.parent:
-                    matrix_basis = bone.matrix_local.inverted() * bone.parent.matrix_local * t.to_matrix()
+                if p_bone.bone.parent:
+                    p_bone_local = p_bone.bone.parent.matrix_local
+                    pose_local = p_bone_local @ t.to_matrix()
                 else:
-                    matrix_basis = bone.matrix_local.inverted() * t.to_matrix()
+                    pose_local = t.to_matrix()
+
+                matrix_basis = p_bone.bone.matrix_local.inverted() @ pose_local
 
                 location, rotation, scale = matrix_basis.decompose()
 
@@ -206,8 +169,11 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
 
             for axis_i in range(3):  # xyz
                 curve = action.fcurves.new(
-                    data_path=location_path, index=axis_i, action_group=location_group)
+                    data_path=location_path,
+                    index=axis_i,
+                    action_group=location_group)
                 keyframe_points = curve.keyframe_points
+                test = npose
                 curve.keyframe_points.add(npose)
 
                 for i in range(npose):
@@ -218,7 +184,9 @@ def import_hkaAnimation(anim, skeleton, use_anim=False):
 
             for axis_i in range(3):  # xyz
                 curve = action.fcurves.new(
-                    data_path=angle_path, index=axis_i, action_group=angle_group)
+                    data_path=angle_path,
+                    index=axis_i,
+                    action_group=angle_group)
                 keyframe_points = curve.keyframe_points
                 curve.keyframe_points.add(npose)
 

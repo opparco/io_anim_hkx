@@ -107,14 +107,14 @@ class Transform(object):
         v = Vector(other.translation)  # dup
         v.rotate(self.rotation)
         t.translation = self.translation + v * self.scale
-        t.rotation = self.rotation * other.rotation
+        t.rotation = self.rotation @ other.rotation
         t.scale = self.scale * other.scale
         return t
 
     def to_matrix(self):
         m_rotation = self.rotation.to_matrix().to_4x4()  # 3x3 to 4x4
         m_scale = Matrix.Scale(self.scale, 4)
-        m = m_rotation * m_scale
+        m = m_rotation @ m_scale
         m.translation = self.translation
         return m
 
@@ -219,7 +219,8 @@ class hkaSkeleton(object):
             f = read_float(file)
             self.referenceFloats.append(f)
 
-        # Floating point track slots. Often used for auxiliary float data or morph target parameters etc.
+        # Floating point track slots.
+        # Often used for auxiliary float data or morph target parameters etc.
         # This defines the target when binding animations to a particular rig.
         nfloatSlots = read_int(file)
         del self.floatSlots[:]
